@@ -16,7 +16,7 @@
   --bg:#FFFFFF; --surface:#FFFFFF; --border:#E3EAF2; --shadow:0 2px 8px rgba(21,32,43,.08);
   --text:#15202B; --muted:#4A5868;
   --rej:#E53935; --rej-ink:#B71C1C; --rej-tint:#FDECEA;
-  --prog:#FBC02D; --prog-ink:#3E2C00; --prog-border:#C79100; --prog-tint:#FFF8E1;
+  --prog:#FFE11A; --prog-ink:#332B00; --prog-border:#D4B800; --prog-tint:#FFFBD6;
   --hired:#43A047; --hired-ink:#1B5E20; --hired-tint:#E8F5E9;
   --radius:16px; --tap:3.5rem;
   color-scheme:light;
@@ -51,9 +51,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* header */
 .topbar{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--border);box-shadow:var(--shadow);display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:1rem;padding:.5rem 1.5rem}
 .brand{display:flex;align-items:center;gap:.75rem;min-width:0}
-.logo-mark{height:48px;width:auto;filter:drop-shadow(0 0 6px #1E90FF) drop-shadow(0 0 14px rgba(30,144,255,.55))}
+.logo-mark{height:68px;width:auto;padding:2px;filter:drop-shadow(0 0 3px rgba(30,144,255,.45))}
 .brand-text{display:flex;flex-direction:column;line-height:1.15}
-.wordmark{font-family:Georgia,"Times New Roman",serif;font-variant:small-caps;letter-spacing:.08em;color:var(--brand-ink);font-size:1.15rem;font-weight:700;white-space:nowrap}
+.wordmark{font-family:Georgia,"Times New Roman",serif;font-variant:small-caps;letter-spacing:.08em;color:var(--brand-ink);font-size:1.35rem;font-weight:700;white-space:nowrap}
 .app-name{font-size:.875rem;color:var(--muted);font-weight:700}
 .search{position:relative;max-width:520px;width:100%;justify-self:center}
 .search .ic{position:absolute;inset-inline-start:1rem;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
@@ -138,20 +138,14 @@ th .plain{display:block;padding:0 1rem}
 td{padding:.75rem 1rem;border-bottom:1px solid var(--border);vertical-align:middle}
 tr:last-child td{border-bottom:0}
 tbody tr{height:4.5rem}
-tr.st-rejected>*{background:var(--rej-tint)!important}
-tr.st-in_progress>*{background:var(--prog-tint)!important}
-tr.st-hired>*{background:var(--hired-tint)!important}
-tr.st-rejected>:first-child{border-inline-start:4px solid var(--rej)}
-tr.st-in_progress>:first-child{border-inline-start:4px solid var(--prog)}
-tr.st-hired>:first-child{border-inline-start:4px solid var(--hired)}
+tbody tr>*{background:#fff}
 .person{display:flex;align-items:center;gap:.75rem}
 .avatar{width:2.75rem;height:2.75rem;border-radius:50%;background:var(--brand-tint);color:var(--brand-ink);display:flex;align-items:center;justify-content:center;font-weight:800;flex:none}
 .pname{font-weight:800}
 .sub{display:block;color:var(--muted);font-size:.875rem}
 .new-tag{display:inline-block;margin-inline-start:.4rem;padding:0 .5rem;border-radius:6px;background:var(--brand-ink);color:#fff;font-size:.75rem;font-weight:800;letter-spacing:.04em;vertical-align:2px}
-.file-btn{display:inline-flex;align-items:center;gap:.5rem;min-height:3.5rem;padding:.25rem .5rem;border:0;border-radius:12px;background:none;cursor:pointer;text-align:start;color:var(--text)}
-.file-btn:hover{background:rgba(255,255,255,.7)}
-.file-btn .fn{font-weight:700;text-decoration:underline;color:var(--brand-ink);word-break:break-all}
+.file-btn{display:inline-flex;align-items:center;gap:.5rem;min-height:3.5rem;padding:.25rem .5rem;border:0;border-radius:12px;background:none;cursor:pointer;text-align:start;color:var(--text);white-space:nowrap}
+.file-btn:hover{background:var(--brand-tint)}
 .ftype{display:inline-flex;align-items:center;justify-content:center;flex-direction:column;width:2.5rem;height:3rem;border-radius:6px;color:#fff;font-size:.6875rem;font-weight:800;flex:none}
 .ftype.pdf{background:#C62828}.ftype.doc{background:#1565C0}
 .badge{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .8rem .3rem .5rem;border-radius:999px;font-weight:800;border:2px solid;white-space:nowrap}
@@ -163,10 +157,7 @@ tr.st-hired>:first-child{border-inline-start:4px solid var(--hired)}
 
 /* mobile cards */
 .card-list{display:none;list-style:none;margin:0;padding:0;flex-direction:column;gap:.75rem}
-.cand-card{padding:1rem;border-radius:var(--radius);border:1px solid var(--border);border-inline-start:6px solid;box-shadow:var(--shadow);cursor:pointer}
-.cand-card.st-rejected{background:var(--rej-tint);border-inline-start-color:var(--rej)}
-.cand-card.st-in_progress{background:var(--prog-tint);border-inline-start-color:var(--prog)}
-.cand-card.st-hired{background:var(--hired-tint);border-inline-start-color:var(--hired)}
+.cand-card{padding:1rem;border-radius:var(--radius);border:1px solid var(--border);background:#fff;box-shadow:var(--shadow);cursor:pointer}
 .cand-card .row{display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem;margin-bottom:.75rem}
 .cand-card .meta{color:var(--muted);font-size:.9375rem;margin:.25rem 0 .75rem}
 .cand-card .btn{width:100%}
@@ -267,7 +258,7 @@ dialog::backdrop{background:rgba(21,32,43,.45)}
 }
 @media (max-width:599px){
   .brand-text .wordmark{display:none}
-  .logo-mark{height:40px}
+  .logo-mark{height:56px}
   .lang-txt{display:none}
   h1{font-size:1.5rem}
 }
@@ -305,7 +296,7 @@ dialog::backdrop{background:rgba(21,32,43,.45)}
     <symbol id="i-down" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
     <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3 2"/></symbol>
     <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
-    <linearGradient id="g-logo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FD4FF"/><stop offset=".55" stop-color="#1E90FF"/><stop offset="1" stop-color="#0B6FE0"/></linearGradient>
+    <linearGradient id="g-logo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3AA8FF"/><stop offset="1" stop-color="#1E90FF"/></linearGradient>
   </defs>
 </svg>
 
@@ -789,7 +780,7 @@ function renderTable(list){
       <td><time datetime="${new Date(c.appliedAt).toISOString()}">${fmtDate(c.appliedAt)}</time></td>
       <td class="opt">${t.sources[c.source]}</td>
       <td>${t.yrs(c.years)}</td>
-      <td><button type="button" class="file-btn" data-open="${c.id}" aria-label="${esc(t.openFile(c.cv.name, c.name))}">${fileType(c)}<span><span class="fn">${esc(c.cv.name)}</span><span class="sub">${sizeTxt(c.cv.sizeKb)}</span></span></button></td>
+      <td><button type="button" class="file-btn" data-open="${c.id}" aria-label="${esc(t.openFile(c.cv.name, c.name))}">${fileType(c)}<span class="sub">${sizeTxt(c.cv.sizeKb)}</span></button></td>
       <td>${badge(c)}</td>
       <td class="opt">${esc(c.recruiter)}</td>
       <td><button type="button" class="btn btn-ghost" data-open="${c.id}" aria-label="${esc(t.viewCvOf(c.name))}">${ic('eye',28)}<span>${t.viewCv}</span></button></td>

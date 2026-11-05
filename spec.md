@@ -16,10 +16,10 @@ The logo keeps the look of the current company mark — a **caduceus** (winged s
 | Symbol | Caduceus: vertical staff, two spread wings at the top, two serpents twisting around the staff, small round knob on top |
 | Main color | Bright medical blue `#1E90FF` (replaces the faded lavender‑blue of the old logo) |
 | Highlight color | Light cyan `#7FD4FF` for inner edges / highlights |
-| Glow | Outer soft glow: `filter: drop-shadow(0 0 6px #1E90FF) drop-shadow(0 0 14px rgba(30,144,255,.55))` |
+| Glow | Soft, light glow that keeps the edges sharp: `filter: drop-shadow(0 0 3px rgba(30,144,255,.45))` |
 | Wordmark | "MICRO MEDICAL DEVICES", serif small caps, color `#0B5ED7`, letter-spacing `0.08em` |
 | Format | Inline SVG (sharp on every screen, can be recolored by CSS) |
-| Sizes | Header: 40 px tall (mobile 32 px) · Login/splash: 160 px tall |
+| Sizes | Header: 68 px tall (mobile 56 px) · Login/splash: 160 px tall |
 | Background | Always shown on the white page background, where the blue glow stands out clearly |
 
 Placement: top-left of the header, symbol + wordmark on desktop, **symbol only** on mobile (< 600 px).
@@ -37,7 +37,7 @@ Placement: top-left of the header, symbol + wordmark on desktop, **symbol only**
 | `--shadow` | `0 2px 8px rgba(21,32,43,.08)` | Soft card shadow |
 | `--text` | `#15202B` | Body text |
 | `--status-rejected` | `#E53935` (red) | Rejected candidates |
-| `--status-progress` | `#FBC02D` (yellow) | Candidates in progress |
+| `--status-progress` | `#FFE11A` (yellow) | Candidates in progress |
 | `--status-hired` | `#43A047` (green) | Hired candidates |
 
 Status is never shown by color alone — every colored badge also has a text label and an icon (✕ / ⏳ / ✓) so it is readable for color-blind users.
@@ -153,11 +153,11 @@ Example jobs for a medical-device company:
 | Status | Color | Badge | Meaning |
 |---|---|---|---|
 | **Rejected** | 🔴 Red `#E53935` | `✕ Rejected` | Candidate was not accepted |
-| **In progress** | 🟡 Yellow `#FBC02D` | `⏳ In progress` | Screening, interview, tests or offer stage |
+| **In progress** | 🟡 Yellow `#FFE11A` | `⏳ In progress` | Screening, interview, tests or offer stage |
 | **Hired** | 🟢 Green `#43A047` | `✓ Hired` | Candidate accepted the offer |
 
 - "In progress" can show a sub-stage as small text: *Screening → Phone interview → Technical interview → Offer*.
-- The whole table row gets a light tint of the status color (10% opacity) plus a 4 px colored left border.
+- Table rows and mobile cards stay **white** — color is used only on the status badge (and in the chart / job mini-bars).
 - Changing status: dropdown in the row or in the CV panel; change is saved with date and user in the history.
 
 ### 3.4 New CV Notification Bell (requirement 4)
@@ -258,7 +258,7 @@ Target: **WCAG 2.2 level AA**, and Israeli Standard **IS 5568** (based on WCAG),
 
 - Text contrast at least **4.5 : 1** on the white background (large text 3 : 1); icons and borders at least **3 : 1**.
 - Status is always shown with **color + text + icon** — never color alone (color-blind safe).
-- **Yellow badge rule:** yellow `#FBC02D` on white is too light for text. The "In progress" badge uses a yellow fill with **dark text `#3E2C00`** and a darker yellow border `#C79100`. Red and green badges use white text on the solid color only if contrast passes; otherwise dark text on a light tint.
+- **Yellow badge rule:** yellow `#FFE11A` on white is too light for text. The "In progress" badge uses a yellow fill with **dark text `#332B00`** and a darker yellow border `#D4B800`. Red and green badges use white text on the solid color only if contrast passes; otherwise dark text on a light tint.
 - Zoom to **200%** and text spacing changes without losing content or needing horizontal scroll.
 - Respects the browser/OS font size — sizes set in `rem`, not fixed `px`.
 - Visible **focus ring**: 3 px brand-blue outline with 2 px white offset on every focusable element.
