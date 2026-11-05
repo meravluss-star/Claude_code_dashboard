@@ -98,7 +98,7 @@ main:focus{outline:none}
 .k-new .kpi-ic{background:#EDE7F6;color:#4527A0}
 
 /* layout */
-.layout{display:grid;grid-template-columns:300px minmax(0,1fr);gap:1.5rem;align-items:start}
+.layout{display:grid;grid-template-columns:270px minmax(0,1fr);gap:1.5rem;align-items:start}
 .card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
 .jobs-panel{padding:1rem;position:sticky;top:6rem}
 .jobs-panel h2{display:flex;align-items:center;gap:.5rem;padding:.25rem .5rem .75rem}
@@ -132,12 +132,17 @@ select:focus-visible,.input:focus-visible,textarea:focus-visible{border-color:va
 .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:14px}
 table{width:100%;border-collapse:separate;border-spacing:0;font-size:1rem}
 th{background:#F7FAFD;text-align:start;font-weight:800;padding:0;border-bottom:1px solid var(--border);white-space:nowrap}
-th .sort{display:flex;align-items:center;gap:.25rem;width:100%;min-height:3.5rem;padding:0 1rem;border:0;background:none;font-weight:800;cursor:pointer;text-align:start}
+th .sort{display:flex;align-items:center;gap:.2rem;width:100%;min-height:3.5rem;padding:0 .6rem;border:0;background:none;font-weight:800;cursor:pointer;text-align:start}
 th .sort:hover{color:var(--brand-ink)}
-th .plain{display:block;padding:0 1rem}
-td{padding:.75rem 1rem;border-bottom:1px solid var(--border);vertical-align:middle}
+th .plain{display:block;padding:0 .6rem}
+td{padding:.4rem .6rem;border-bottom:1px solid var(--border);vertical-align:middle}
 tr:last-child td{border-bottom:0}
-tbody tr{height:4.5rem}
+tbody tr{height:4rem}
+#candTable .name-cell{padding:.4rem .6rem!important;white-space:normal}
+.cv-cell .ftype{width:2.25rem;height:2.6rem}
+.badge-sm{font-size:.9375rem;padding:.15rem .6rem .15rem .35rem;gap:.3rem;border-width:1.5px}
+.badge-sm+.stage{font-size:.8125rem;margin-top:.15rem}
+.act-btn{padding:0;min-width:3.5rem}
 tbody tr>*{background:#fff}
 .person{display:flex;align-items:center;gap:.75rem}
 .avatar{width:2.75rem;height:2.75rem;border-radius:50%;background:var(--brand-tint);color:var(--brand-ink);display:flex;align-items:center;justify-content:center;font-weight:800;flex:none}
@@ -229,9 +234,13 @@ dialog::backdrop{background:rgba(21,32,43,.45)}
 .toast .icon-btn:hover{background:rgba(255,255,255,.15)}
 @keyframes pop{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
 
-@media (max-width:1279px){ .opt{display:none} .kpis{grid-template-columns:repeat(3,minmax(0,1fr))} }
+.opt{display:none} /* Source & Recruiter are shown in the CV panel */
+@media (max-width:1365px){ .opt-md{display:none} .email-sub{display:none!important} .job-sub{display:block!important} }
+@media (max-width:1279px){ .kpis{grid-template-columns:repeat(3,minmax(0,1fr))} }
 @media (max-width:1023px){
   .layout{grid-template-columns:1fr}
+  .topbar{grid-template-columns:1fr auto}
+  .search{grid-column:1/-1;grid-row:2;max-width:none;margin-bottom:.25rem}
   .jobs-panel{display:none}
   .job-field{display:flex}
   .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -660,7 +669,7 @@ function ago(t){
   return rtf.format(Math.round(s/86400), 'day');
 }
 const sizeTxt = kb => kb >= 1024 ? (kb/1024).toFixed(1) + ' MB' : kb + ' KB';
-const badge = c => `<span class="badge b-${c.status}">${ic(STATUS_IC[c.status],24)}<span>${T()[c.status]}</span></span>` +
+const badge = (c, sm) => `<span class="badge b-${c.status}${sm?' badge-sm':''}">${ic(STATUS_IC[c.status],sm?20:24)}<span>${T()[c.status]}</span></span>` +
   (c.status==='in_progress' && c.stage ? `<span class="stage">${T().stages[c.stage]}</span>` : '');
 const fileType = c => `<span class="ftype ${c.cv.type}" aria-hidden="true">${ic('file',18)}${c.cv.type==='pdf'?'PDF':'DOC'}</span>`;
 
@@ -756,15 +765,15 @@ function renderChips(){
 }
 
 const COLS = [
-  {k:'name', l:'colName', sort:true}, {k:'job', l:'colJob', sort:true, jobCol:true}, {k:'appliedAt', l:'colApplied', sort:true},
-  {k:'source', l:'colSource', sort:true, opt:true}, {k:'years', l:'colExp', sort:true}, {k:'cv', l:'colCv'},
+  {k:'name', l:'colName', sort:true}, {k:'job', l:'colJob', sort:true, jobCol:true, md:true}, {k:'appliedAt', l:'colApplied', sort:true},
+  {k:'source', l:'colSource', sort:true, opt:true}, {k:'years', l:'colExp', sort:true, md:true}, {k:'cv', l:'colCv'},
   {k:'status', l:'colStatus', sort:true}, {k:'recruiter', l:'colRecruiter', sort:true, opt:true}, {k:'act', l:'colActions'}
 ];
 function renderTable(list){
   const t = T(), showJob = state.job==='all';
   const cols = COLS.filter(c=>!c.jobCol || showJob);
   $('#thead').innerHTML = cols.map(c=>{
-    const cls = c.opt ? ' class="opt"' : '';
+    const cls = c.opt ? ' class="opt"' : c.md ? ' class="opt-md"' : '';
     if(!c.sort) return `<th scope="col"${cls}><span class="plain">${t[c.l]}</span></th>`;
     const active = state.sort.key===c.k;
     const aria = active ? ` aria-sort="${state.sort.dir==='asc'?'ascending':'descending'}"` : '';
@@ -775,15 +784,15 @@ function renderTable(list){
     const job = jobById(c.jobId);
     return `<tr class="st-${c.status}">
       <th scope="row" style="font-weight:400;padding:.75rem 1rem;border-bottom:1px solid var(--border);background:inherit" class="name-cell">
-        <span class="person"><span class="avatar" aria-hidden="true">${initials(c.name)}</span><span><span class="pname">${esc(c.name)}</span>${c.isNew?`<span class="new-tag">${t.newTag}</span>`:''}<span class="sub">${esc(c.email)}</span></span></span></th>
-      ${showJob?`<td>${esc(job.title)}</td>`:''}
+        <span class="person"><span class="avatar" aria-hidden="true">${initials(c.name)}</span><span><span class="pname">${esc(c.name)}</span>${c.isNew?`<span class="new-tag">${t.newTag}</span>`:''}<span class="sub email-sub">${esc(c.email)}</span>${showJob?`<span class="sub job-sub" style="display:none">${esc(job.title)}</span>`:''}</span></span></th>
+      ${showJob?`<td class="opt-md">${esc(job.title)}</td>`:''}
       <td><time datetime="${new Date(c.appliedAt).toISOString()}">${fmtDate(c.appliedAt)}</time></td>
       <td class="opt">${t.sources[c.source]}</td>
-      <td>${t.yrs(c.years)}</td>
-      <td><button type="button" class="file-btn" data-open="${c.id}" aria-label="${esc(t.openFile(c.cv.name, c.name))}">${fileType(c)}<span class="sub">${sizeTxt(c.cv.sizeKb)}</span></button></td>
-      <td>${badge(c)}</td>
+      <td class="opt-md">${t.yrs(c.years)}</td>
+      <td class="cv-cell"><button type="button" class="file-btn" data-open="${c.id}" aria-label="${esc(t.openFile(c.cv.name, c.name))}" title="${esc(c.cv.name)} · ${sizeTxt(c.cv.sizeKb)}">${fileType(c)}</button></td>
+      <td>${badge(c, true)}</td>
       <td class="opt">${esc(c.recruiter)}</td>
-      <td><button type="button" class="btn btn-ghost" data-open="${c.id}" aria-label="${esc(t.viewCvOf(c.name))}">${ic('eye',28)}<span>${t.viewCv}</span></button></td>
+      <td><button type="button" class="btn btn-ghost act-btn" data-open="${c.id}" aria-label="${esc(t.viewCvOf(c.name))}" title="${esc(t.viewCv)}">${ic('eye',28)}</button></td>
     </tr>`;
   }).join('');
 }
