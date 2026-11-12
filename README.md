@@ -14,7 +14,7 @@ A dashboard for the HR / Talent Acquisition team at Micro Medical Devices. It sh
 - **Color-coded status** — 🔴 Rejected · 🟡 In progress · 🟢 Hired, shown with color + text + icon on the status badges and in the chart. Table rows and cards stay white — color is used only for status. "In progress" shows the stage (Screening, Phone interview, Technical interview, Offer). Change status and add notes in the CV panel; every change is saved to the candidate's history. Changing a hired candidate to rejected asks for confirmation.
 - **New CV bell** — bell in the header with a red counter of unread new CVs; it shakes and shows a message when a CV arrives. Click it to see the latest CVs and open one, or "Mark all as read". New candidates get a "NEW" tag. In the demo, a new CV arrives automatically after 25 seconds and then every minute, or with "Simulate new CV".
 - **Mobile friendly** — layouts for desktop, tablet and phone; on phones the table becomes cards and the CV panel opens full screen.
-- **Big friendly icons & big touch targets** — rounded icons (24–48 px) and buttons of at least 56 × 56 px.
+- **Big friendly icons & big touch targets** — rounded icons (24–48 px) and buttons of at least 56 × 56 px (including the View and close buttons in pop-up messages).
 - **White background** — clean white page on all devices.
 - **Glowing blue logo** — the company caduceus logo, large (68 px) in clear bright blue (`#1E90FF`) with a soft, light glow.
 - **Accessibility** — designed for WCAG 2.2 AA and Israeli Standard IS 5568: keyboard-only use (shortcuts `/` = search, `N` = notifications), screen-reader labels and announcements, reduced motion, English / Hebrew (right-to-left) switch, and an [accessibility statement](accessibility.html).
@@ -24,6 +24,7 @@ A dashboard for the HR / Talent Acquisition team at Micro Medical Devices. It sh
 - All candidates are fictional sample data built into the page; there is no server or database yet.
 - Status changes and notes are saved only in your own browser (local storage). Uploaded CVs disappear when the page is reloaded.
 - No login yet — the spec's sign-in, roles and secure CV storage need a real backend.
+- The full list of what the demo does not include is in the spec's **§0 Out of Scope** section.
 
 ## Project files
 
@@ -32,5 +33,5 @@ A dashboard for the HR / Talent Acquisition team at Micro Medical Devices. It sh
 | [index.html](index.html) | The dashboard (one page: HTML, CSS and JavaScript) |
 | [accessibility.html](accessibility.html) | Accessibility statement |
 | [spec.md](spec.md) | Full dashboard specification |
-| [practice.md](practice.md) | Working rules (commit & push every approved feature, keep README updated) |
+| [practice.md](practice.md) | Working rules (commit & push every change, keep README updated, keep the spec and its acceptance criteria consistent) |
 | README.md | This file — project description and features |

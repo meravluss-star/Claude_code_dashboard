@@ -19,11 +19,18 @@ Rules for everyone (people and Claude) working on this project.
 - Whenever a feature is added or changed, update the README's **description / features** section in the **same commit**.
 - The README must always match what is in `spec.md` and in the dashboard itself.
 
+## 3. Keep the spec consistent
+
+- When any requirement in `spec.md` changes, **search the whole spec** for every place that mentions it — especially the **Acceptance Criteria (§8)** — and update them in the same change, so the spec never contradicts itself.
+- Check the dashboard against the numbers in the spec (for example: every button at least 56 × 56 px, including small ones in pop-up messages and dialogs).
+- Anything the demo does not do goes in **§0 Out of Scope**.
+
 ## Checklist for every change
 
 1. Change the files (`index.html`, `spec.md`, etc.).
-2. Test in the browser (desktop, tablet, phone).
-3. Update `README.md` (description / features).
-4. Commit with a clear message.
-5. Push to GitHub (`main` branch) — automatically.
-6. Check that the GitHub Pages build finished and the live site shows the change.
+2. If the spec changed: re-check the Acceptance Criteria (§8) and Out of Scope (§0).
+3. Test in the browser (desktop, tablet, phone).
+4. Update `README.md` (description / features).
+5. Commit with a clear message.
+6. Push to GitHub (`main` branch) — automatically.
+7. Check that the GitHub Pages build finished and the live site shows the change.

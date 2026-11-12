@@ -1,8 +1,30 @@
 # Micro Medical Devices — HR Recruiting Dashboard
 
-**Spec version:** 1.0 · **Date:** 2026-11-05
+**Spec version:** 1.1 · **Date:** 2026-11-12 (1.0: 2026-11-05)
 **Owner:** HR / Talent Acquisition
 **Purpose:** One screen where recruiters see every open job, the candidates for each job, their CV files and hiring status, with an alert when a new CV arrives. The dashboard works on desktop, tablet and mobile.
+
+> **Scope of this version:** this spec describes the full target system. What was actually built is a **front-end demo** (one HTML page with fictional data). Sections 4–6 and parts of 3 describe the future real system — see **§0 Out of Scope** for exactly what the demo does *not* include.
+
+---
+
+## 0. Out of Scope (demo version 1.0)
+
+The demo on GitHub Pages is a static page with no server. The following parts of this spec are **not** included in the demo and are planned for a later, real version:
+
+| Not in the demo | Spec section | What the demo does instead |
+|---|---|---|
+| Login, company SSO, user roles (HR Admin, Recruiter, Hiring Manager) | §6 | No login — anyone with the link sees the demo |
+| Backend server and REST API (`/api/...`) | §5 | All data is built into the page as JavaScript |
+| Database and real candidate data | §4 | Fictional sample candidates only; the data model in §4 is the target format |
+| Secure / encrypted CV storage, HTTPS-only file access, access log of CV views | §3.2, §6 | Sample CVs are generated in the browser; uploaded CVs live only in memory and disappear on reload |
+| Data retention and deletion by privacy law (GDPR / Israeli Privacy Protection Law) | §6 | Not applicable — no real personal data is stored |
+| Saving status changes, notes and history for all users | §3.3 | Saved only in the user's own browser (`localStorage`) |
+| Real new-CV notifications (polling every 60 s / WebSocket / push) | §3.4 | A simulated new CV after 25 s, then every minute, or via "Simulate new CV" |
+| Date-range filter and filter bottom sheet on mobile | §3.1, §3.5 | Filters by job, status, source and free-text search |
+| Formal accessibility testing (axe / Lighthouse ≥ 95, NVDA, VoiceOver) and a real accessibility contact | §7.7 | Built to WCAG 2.2 AA guidelines; accessibility statement page included |
+
+Acceptance criteria in §8 apply to the demo only where they do not depend on the items above.
 
 ---
 
@@ -313,11 +335,11 @@ Target: **WCAG 2.2 level AA**, and Israeli Standard **IS 5568** (based on WCAG),
 
 1. Selecting a job shows only that job's candidates; counts match the KPI cards and chart.
 2. Every candidate row has a working CV link that previews and downloads the file.
-3. Rejected = red, In progress = yellow, Hired = green — in badges, row tint, chart and job mini-bars.
+3. Rejected = red, In progress = yellow, Hired = green — in status badges, chart and job mini-bars only; table rows and mobile cards stay white (no row tint), as in §3.3.
 4. A newly added CV increases the bell counter within 60 s and appears in the bell dropdown.
 5. At 375 px width the dashboard has no horizontal scroll and candidates show as cards.
 6. The header shows the caduceus logo in bright glowing blue on a white background.
 7. The page background is white on all devices.
-8. Every button and icon button is at least 56 × 56 px; icons follow the sizes in §1.3.
+8. Every button and icon button — including the "View" and close (✕) buttons in toasts, dialogs and the CV panel — is at least 56 × 56 px; status dropdowns and filter chips are at least 48 px tall (§1.4); icons follow the sizes in §1.3.
 9. The full flow (find a candidate, open the CV, change status, read new-CV alerts) works with keyboard only and with a screen reader (NVDA, VoiceOver).
 10. Automated accessibility check (axe / Lighthouse) shows no critical issues and score ≥ 95; all text passes 4.5 : 1 contrast.
