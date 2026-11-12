@@ -82,6 +82,13 @@ main{padding:1.5rem;max-width:1440px;margin:0 auto}
 main:focus{outline:none}
 .page-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.25rem}
 .demo-note{margin:.25rem 0 0;color:var(--muted);font-size:.9375rem}
+.demo-note.live{color:var(--hired-ink,#146c2e);font-weight:700}
+.demo-note.bad{color:var(--rej-ink);font-weight:700}
+.at-dot{width:12px;height:12px;border-radius:50%;background:#9aa5b1;border:2px solid #fff;position:absolute;top:8px;inset-inline-end:6px}
+.at-dot.on{background:#1f9d55}
+.at-help{margin:0;line-height:1.6}
+.at-help ol{margin:.5rem 0 0;padding-inline-start:1.5rem}
+.at-help code{background:#f1f4f8;padding:0 .3rem;border-radius:6px}
 
 /* KPI */
 .kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1rem;margin-bottom:1.5rem}
@@ -305,6 +312,7 @@ dialog::backdrop{background:rgba(21,32,43,.45)}
     <symbol id="i-down" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
     <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3 2"/></symbol>
     <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+    <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol>
     <linearGradient id="g-logo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3AA8FF"/><stop offset="1" stop-color="#1E90FF"/></linearGradient>
   </defs>
 </svg>
@@ -338,6 +346,11 @@ dialog::backdrop{background:rgba(21,32,43,.45)}
   </div>
 
   <div class="actions">
+    <button id="atBtn" class="icon-btn" type="button" aria-haspopup="dialog">
+      <svg class="ic" width="32" height="32" aria-hidden="true"><use href="#i-db"/></svg>
+      <span class="lang-txt">Airtable</span>
+      <span class="at-dot" id="atDot" aria-hidden="true"></span>
+    </button>
     <button id="langBtn" class="icon-btn" type="button" lang="he">
       <svg class="ic" width="32" height="32" aria-hidden="true"><use href="#i-globe"/></svg>
       <span class="lang-txt" id="langTxt">עברית</span>
@@ -366,7 +379,7 @@ dialog::backdrop{background:rgba(21,32,43,.45)}
   <div class="page-head">
     <div>
       <h1 data-i18n="pageTitle">Recruiting dashboard</h1>
-      <p class="demo-note" data-i18n="demoNote">Demo data — all candidates are fictional.</p>
+      <p class="demo-note" id="dataNote" role="status">Demo data — all candidates are fictional.</p>
     </div>
     <button id="uploadBtn" class="btn btn-primary" type="button">
       <svg class="ic" width="28" height="28" aria-hidden="true"><use href="#i-upload"/></svg>
@@ -474,6 +487,32 @@ dialog::backdrop{background:rgba(21,32,43,.45)}
   </form>
 </dialog>
 
+<dialog id="atDlg" class="modal" aria-labelledby="atH">
+  <form id="atForm" novalidate>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem">
+      <h2 id="atH" data-i18n="atTitle">Connect to Airtable</h2>
+      <button type="button" class="icon-btn" data-close data-i18n-aria="close" aria-label="Close"><svg class="ic" width="28" height="28" aria-hidden="true"><use href="#i-x"/></svg></button>
+    </div>
+    <p id="atState" class="muted" style="margin:0"></p>
+    <div class="at-help" id="atHelp"></div>
+    <div class="field">
+      <label for="atToken" data-i18n="atToken">Personal access token</label>
+      <input id="atToken" class="input" type="password" autocomplete="off" spellcheck="false" dir="ltr" aria-describedby="atTokenErr">
+      <p class="err" id="atTokenErr" hidden></p>
+    </div>
+    <div class="field">
+      <label for="atBase" data-i18n="atBase">Base ID</label>
+      <input id="atBase" class="input" type="text" autocomplete="off" spellcheck="false" dir="ltr" aria-describedby="atBaseErr">
+      <p class="err" id="atBaseErr" hidden></p>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-ghost" id="atOff" data-i18n="atOff" hidden>Disconnect</button>
+      <button type="button" class="btn btn-ghost" data-close data-i18n="cancel">Cancel</button>
+      <button type="submit" class="btn btn-primary" id="atGo"><svg class="ic" width="24" height="24" aria-hidden="true"><use href="#i-db"/></svg><span data-i18n="atGo">Connect</span></button>
+    </div>
+  </form>
+</dialog>
+
 <div id="live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 <div id="toasts" class="toasts"></div>
 
@@ -512,7 +551,24 @@ const I18N = {
   previewNA:'Preview is not available for Word files. Download the file to open it.',
   cvReceived:'CV received', statusChanged:(a,b)=>`Status changed: ${a} → ${b}`, noteAdded:'Note added', you:'You', system:'System',
   sortBy:k=>`Sort by ${k}`, dismiss:'Dismiss',
-  sources:{LinkedIn:'LinkedIn','Company site':'Company site',Referral:'Referral',Agency:'Agency'}
+  sources:{LinkedIn:'LinkedIn','Company site':'Company site',Referral:'Referral',Agency:'Agency'},
+  atTitle:'Connect to Airtable', atToken:'Personal access token', atBase:'Base ID', atGo:'Connect', atOff:'Disconnect',
+  atAria:on=>on?'Airtable: connected. Open connection settings':'Airtable: not connected. Connect to Airtable',
+  atHelp:`<p style="margin:0">The token is saved only in this browser. It is never put in the site's code.</p>
+    <ol><li>Open <a href="https://airtable.com/create/tokens" target="_blank" rel="noopener">airtable.com/create/tokens</a> and choose <b>Create token</b>.</li>
+    <li>Add the scopes <code>data.records:read</code> and <code>data.records:write</code>.</li>
+    <li>Under <b>Access</b>, add the base <b>HR Recruiting – Micro Medical Devices</b>.</li>
+    <li>Create the token, copy it and paste it here.</li></ol>`,
+  atStateOn:t=>`Connected. Last update: ${t}.`, atStateOff:'Not connected. The dashboard shows demo data.',
+  atLoading:'Loading candidates from Airtable…', atLive:(n,t)=>`Live data from Airtable · ${n} candidates · updated ${t}`,
+  atBroken:'Could not reach Airtable. Showing the last data loaded.', atFailed:'Could not connect to Airtable. Click the Airtable button to fix the connection.', atConnected:n=>`Connected to Airtable. ${n} candidates loaded.`,
+  errToken:'Please paste the token.', errBase:'The Base ID starts with "app" and has 17 characters.',
+  errAuth:'This token is not valid. Check that you copied all of it.',
+  errAccess:'This token has no access to the base. Add the base under Access and the scopes data.records:read and data.records:write.',
+  errTable:'The base has no "Candidates" table.', errNet:'Could not reach Airtable. Check your internet connection and try again.',
+  errSave:m=>`Not saved to Airtable: ${m}`, errCvUp:m=>`The candidate was added, but the CV file was not uploaded: ${m}`,
+  errCvBig:'The candidate was added. CV files over 5 MB cannot be uploaded from here — add the file in Airtable.',
+  noCv:'No CV file', noCvFile:'No CV file is attached in Airtable.', openFile2:'Open file', skipped:n=>`${n} Airtable rows were skipped (missing name or unknown job).`
  },
  he:{
   skip:'דילוג לתוכן הראשי', appName:'גיוס עובדים', pageTitle:'לוח בקרה לגיוס', demoNote:'נתוני הדגמה — כל המועמדים בדויים.',
@@ -543,7 +599,24 @@ const I18N = {
   previewNA:'אין תצוגה מקדימה לקובצי Word. הורידו את הקובץ כדי לפתוח אותו.',
   cvReceived:'קורות החיים התקבלו', statusChanged:(a,b)=>`שינוי סטטוס: ${a} ← ${b}`, noteAdded:'נוספה הערה', you:'את/ה', system:'מערכת',
   sortBy:k=>`מיון לפי ${k}`, dismiss:'סגירת ההודעה',
-  sources:{LinkedIn:'לינקדאין','Company site':'אתר החברה',Referral:'חבר מביא חבר',Agency:'חברת השמה'}
+  sources:{LinkedIn:'לינקדאין','Company site':'אתר החברה',Referral:'חבר מביא חבר',Agency:'חברת השמה'},
+  atTitle:'חיבור ל-Airtable', atToken:'טוקן גישה אישי (Personal access token)', atBase:'מזהה ה-Base', atGo:'התחברות', atOff:'ניתוק',
+  atAria:on=>on?'Airtable: מחובר. פתיחת הגדרות החיבור':'Airtable: לא מחובר. התחברות ל-Airtable',
+  atHelp:`<p style="margin:0">הטוקן נשמר רק בדפדפן הזה. הוא אף פעם לא נכנס לקוד האתר.</p>
+    <ol><li>פותחים את <a href="https://airtable.com/create/tokens" target="_blank" rel="noopener">airtable.com/create/tokens</a> ובוחרים <b>Create token</b>.</li>
+    <li>מוסיפים את ההרשאות <code dir="ltr">data.records:read</code> ו-<code dir="ltr">data.records:write</code>.</li>
+    <li>תחת <b>Access</b> מוסיפים את ה-Base <b dir="ltr">HR Recruiting – Micro Medical Devices</b>.</li>
+    <li>יוצרים את הטוקן, מעתיקים ומדביקים כאן.</li></ol>`,
+  atStateOn:t=>`מחובר. עדכון אחרון: ${t}.`, atStateOff:'לא מחובר. הלוח מציג נתוני הדגמה.',
+  atLoading:'טוען מועמדים מ-Airtable…', atLive:(n,t)=>`נתונים חיים מ-Airtable · ${n} מועמדים · עודכן ${t}`,
+  atBroken:'אין חיבור ל-Airtable. מוצגים הנתונים האחרונים שנטענו.', atFailed:'לא הצלחנו להתחבר ל-Airtable. לחצו על כפתור Airtable כדי לתקן את החיבור.', atConnected:n=>`מחובר ל-Airtable. נטענו ${n} מועמדים.`,
+  errToken:'נא להדביק את הטוקן.', errBase:'מזהה ה-Base מתחיל ב-app ויש בו 17 תווים.',
+  errAuth:'הטוקן לא תקין. בדקו שהעתקתם את כולו.',
+  errAccess:'לטוקן אין גישה ל-Base. הוסיפו את ה-Base תחת Access ואת ההרשאות data.records:read ו-data.records:write.',
+  errTable:'אין ב-Base טבלה בשם "Candidates".', errNet:'אין חיבור ל-Airtable. בדקו את החיבור לאינטרנט ונסו שוב.',
+  errSave:m=>`לא נשמר ב-Airtable: ${m}`, errCvUp:m=>`המועמד/ת נוספ/ה, אבל קובץ קורות החיים לא הועלה: ${m}`,
+  errCvBig:'המועמד/ת נוספ/ה. אי אפשר להעלות מכאן קבצים מעל 5MB — הוסיפו את הקובץ ישירות ב-Airtable.',
+  noCv:'אין קובץ קו״ח', noCvFile:'לא מצורף קובץ קורות חיים ב-Airtable.', openFile2:'פתיחת הקובץ', skipped:n=>`${n} שורות ב-Airtable דולגו (חסר שם או משרה לא מוכרת).`
  }
 };
 let lang = 'en';
@@ -553,6 +626,13 @@ const T = () => I18N[lang];
 const KEY = 'mmd-hr-dashboard-v1';
 function load(){ try{ return JSON.parse(localStorage.getItem(KEY)) || {}; }catch(e){ return {}; } }
 function persist(){
+  if(at.live){
+    // Live mode: keep the demo's saved changes untouched; only remember language and which CVs were read.
+    candidates.forEach(c=>{ if(!c.isNew) at.seen.add(c.id); });
+    saveAt();
+    try{ const s = load(); s.lang = lang; localStorage.setItem(KEY, JSON.stringify(s)); }catch(e){}
+    return;
+  }
   try{
     const cand = {};
     candidates.filter(c=>!c.local).forEach(c=>{ cand[c.id] = {status:c.status, stage:c.stage, notes:c.notes, history:c.history.filter(h=>h.user), isNew:c.isNew}; });
@@ -671,7 +751,7 @@ function ago(t){
 const sizeTxt = kb => kb >= 1024 ? (kb/1024).toFixed(1) + ' MB' : kb + ' KB';
 const badge = (c, sm) => `<span class="badge b-${c.status}${sm?' badge-sm':''}">${ic(STATUS_IC[c.status],sm?20:24)}<span>${T()[c.status]}</span></span>` +
   (c.status==='in_progress' && c.stage ? `<span class="stage">${T().stages[c.stage]}</span>` : '');
-const fileType = c => `<span class="ftype ${c.cv.type}" aria-hidden="true">${ic('file',18)}${c.cv.type==='pdf'?'PDF':'DOC'}</span>`;
+const fileType = c => c.cv.type==='none' ? '' : `<span class="ftype ${c.cv.type}" aria-hidden="true">${ic('file',18)}${c.cv.type==='pdf'?'PDF':'DOC'}</span>`;
 
 function announce(msg){ const l = $('#live'); l.textContent = ''; setTimeout(()=>{ l.textContent = msg; }, 60); }
 
@@ -720,6 +800,8 @@ function renderStatic(){
   $('#srcSel').innerHTML = `<option value="all">${t.allSources}</option>` + SOURCES.map(s=>`<option value="${s}">${t.sources[s]}</option>`).join('');
   $('#srcSel').value = state.source;
   $('#legend').innerHTML = ['in_progress','hired','rejected'].map(s=>`<li><i class="s-${s==='in_progress'?'prog':s==='hired'?'hired':'rej'}" aria-hidden="true"></i>${ic(STATUS_IC[s],24)}${t[s]}</li>`).join('');
+  $('#atHelp').innerHTML = t.atHelp;
+  renderAtState();
 }
 
 function renderKPIs(){
@@ -789,7 +871,7 @@ function renderTable(list){
       <td><time datetime="${new Date(c.appliedAt).toISOString()}">${fmtDate(c.appliedAt)}</time></td>
       <td class="opt">${t.sources[c.source]}</td>
       <td class="opt-md">${t.yrs(c.years)}</td>
-      <td class="cv-cell"><button type="button" class="file-btn" data-open="${c.id}" aria-label="${esc(t.openFile(c.cv.name, c.name))}" title="${esc(c.cv.name)} · ${sizeTxt(c.cv.sizeKb)}">${fileType(c)}</button></td>
+      <td class="cv-cell">${c.cv.type==='none' ? `<span class="muted" title="${t.noCv}"><span aria-hidden="true">—</span><span class="sr-only">${t.noCv}</span></span>` : `<button type="button" class="file-btn" data-open="${c.id}" aria-label="${esc(t.openFile(c.cv.name, c.name))}" title="${esc(c.cv.name)} · ${sizeTxt(c.cv.sizeKb)}">${fileType(c)}</button>`}</td>
       <td>${badge(c, true)}</td>
       <td class="opt">${esc(c.recruiter)}</td>
       <td><button type="button" class="btn btn-ghost act-btn" data-open="${c.id}" aria-label="${esc(t.viewCvOf(c.name))}" title="${esc(t.viewCv)}">${ic('eye',28)}</button></td>
@@ -888,6 +970,7 @@ function makeDoc(lines){
   return new Blob([html], {type:'application/msword'});
 }
 function downloadCv(c){
+  if(c.cv.remote){ window.open(c.cv.url, '_blank', 'noopener'); return; }
   let blob, name = c.cv.name;
   if(c.cv.blob){ blob = c.cv.blob; }
   else if(c.cv.type==='pdf'){ blob = makePdf(cvLines(c)); }
@@ -920,7 +1003,10 @@ function historyText(h){
 function renderPanel(c){
   const t = T(), job = jobById(c.jobId);
   let preview;
-  if(c.cv.blob && c.cv.type==='pdf') preview = `<iframe class="cv-frame" src="${c.cv.url}" title="${esc(c.cv.name)}"></iframe>`;
+  if(c.cv.type==='none') preview = `<p>${t.noCvFile}</p>`;
+  else if(c.cv.remote && c.cv.type==='pdf') preview = `<iframe class="cv-frame" src="${esc(c.cv.url)}" title="${esc(c.cv.name)}"></iframe>`;
+  else if(c.cv.remote) preview = `<p>${t.previewNA}</p>`;
+  else if(c.cv.blob && c.cv.type==='pdf') preview = `<iframe class="cv-frame" src="${c.cv.url}" title="${esc(c.cv.name)}"></iframe>`;
   else if(c.cv.blob) preview = `<p>${t.previewNA}</p>`;
   else preview = `<article class="cv-doc" lang="en" dir="ltr" aria-label="${esc(c.cv.name)}">
       <div class="cv-name">${esc(c.name)}</div><div class="muted">${esc(c.email)} · ${esc(c.phone)}</div>
@@ -960,8 +1046,8 @@ function renderPanel(c){
       </section>
       <section aria-labelledby="pCv">
         <h3 id="pCv">${ic('file',28)}${t.cv}: <span style="font-weight:700">${esc(c.cv.name)}</span></h3>
-        <div class="cv-actions"><button type="button" class="btn btn-primary" id="dlBtn">${ic('download',28)}<span>${t.download}</span></button>
-          <span class="muted" style="align-self:center">${c.cv.type==='pdf'?'PDF':'Word'} · ${sizeTxt(c.cv.sizeKb)}</span></div>
+        ${c.cv.type==='none' ? '' : `<div class="cv-actions"><button type="button" class="btn btn-primary" id="dlBtn">${ic(c.cv.remote?'eye':'download',28)}<span>${c.cv.remote?t.openFile2:t.download}</span></button>
+          <span class="muted" style="align-self:center">${c.cv.type==='pdf'?'PDF':'Word'} · ${sizeTxt(c.cv.sizeKb)}</span></div>`}
         ${preview}
       </section>
       <section aria-labelledby="pNotes">
@@ -984,8 +1070,12 @@ function renderPanel(c){
     const to = $('#stSel').value, stage = to==='in_progress' ? $('#stageSel').value : null;
     if(to===c.status && stage===c.stage) return;
     if(c.status==='hired' && to==='rejected' && !confirm(t.confirmRej(c.name))) return;
-    c.history.push({at:Date.now(), key:'status', from:c.status, to, stage, user:true});
+    const before = {status:c.status, stage:c.stage}, entry = {at:Date.now(), key:'status', from:c.status, to, stage, user:true};
+    c.history.push(entry);
     c.status = to; c.stage = stage;
+    if(c.remote) atSave(c, {Status:AT_STATUS_OUT[to], Stage:stage ? AT_STAGE_OUT[stage] : null}, ()=>{
+      Object.assign(c, before); c.history = c.history.filter(h=>h!==entry);
+    });
     persist(); renderAll(); renderPanel(c);
     $('#stSel').focus();
     announce(t.saved + ': ' + t[to] + (stage ? ', ' + t.stages[stage] : ''));
@@ -993,11 +1083,13 @@ function renderPanel(c){
   $('#noteForm').addEventListener('submit', e=>{
     e.preventDefault();
     const txt = $('#noteTxt').value.trim(); if(!txt) { $('#noteTxt').focus(); return; }
-    c.notes.push({text:txt, at:Date.now()});
+    const note = {text:txt, at:Date.now()};
+    c.notes.push(note);
     c.history.push({at:Date.now(), key:'note', user:true});
+    if(c.remote) atSave(c, {Notes:notesToText(c.notes)}, ()=>{ c.notes = c.notes.filter(n=>n!==note); });
     persist(); renderPanel(c); $('#noteTxt').focus(); announce(t.noteAdded);
   });
-  $('#dlBtn').addEventListener('click', ()=>downloadCv(c));
+  if($('#dlBtn')) $('#dlBtn').addEventListener('click', ()=>downloadCv(c));
 }
 function outside(dlg, e){
   if(e.target!==dlg || !e.clientX) return false;
@@ -1111,6 +1203,7 @@ upForm.addEventListener('submit', e=>{
   upDlg.close();
   addCandidate(c);
   $('#uploadBtn').focus();
+  if(at.live) atCreate(c, f);
 });
 
 /* ---------------- global events ---------------- */
@@ -1158,9 +1251,214 @@ document.addEventListener('keydown', e=>{
   else if(e.key==='n' || e.key==='N'){ e.preventDefault(); toggleBell(); }
 });
 
+/* ---------------- Airtable ----------------
+   The token is typed by the user and kept only in this browser's local storage.
+   It is never written into the page's code, so the public GitHub Pages site stays safe. */
+const AT_KEY = 'mmd-hr-airtable-v1';
+const AT_DEFAULT_BASE = 'appZ97rL7uoJsaHWn';
+const AT_TABLE = 'Candidates';
+const AT_POLL_MS = 30000;
+const AT_STATUS = {'In progress':'in_progress', Rejected:'rejected', Hired:'hired'};
+const AT_STATUS_OUT = {in_progress:'In progress', rejected:'Rejected', hired:'Hired'};
+const AT_STAGE = {Screening:'screening', Phone:'phone', Technical:'technical', Offer:'offer'};
+const AT_STAGE_OUT = {screening:'Screening', phone:'Phone', technical:'Technical', offer:'Offer'};
+const at = (()=>{
+  let cfg = null;
+  try{ cfg = JSON.parse(localStorage.getItem(AT_KEY)); }catch(e){}
+  return { cfg: cfg && cfg.token ? cfg : null, seen: new Set((cfg && cfg.seen) || []), live:false, loading:false, broken:false, lastSync:null, pending:0, timer:null };
+})();
+function saveAt(){
+  try{
+    if(at.cfg) localStorage.setItem(AT_KEY, JSON.stringify({token:at.cfg.token, base:at.cfg.base, synced:!!at.cfg.synced, seen:[...at.seen]}));
+    else localStorage.removeItem(AT_KEY);
+  }catch(e){}
+}
+async function atApi(path, opts={}, host='https://api.airtable.com/v0/'){
+  let res;
+  try{
+    res = await fetch(host + at.cfg.base + '/' + path, {...opts, headers:{Authorization:'Bearer ' + at.cfg.token, 'Content-Type':'application/json'}});
+  }catch(e){ const err = new Error('network'); err.kind = 'net'; throw err; }
+  if(!res.ok){
+    let msg = '';
+    try{ const j = await res.json(); msg = j.error ? (j.error.message || j.error.type || String(j.error)) : ''; }catch(e){}
+    const err = new Error(msg || ('HTTP ' + res.status));
+    err.kind = res.status===401 ? 'auth' : (res.status===403 || res.status===404) ? (/table/i.test(msg) ? 'table' : 'access') : 'other';
+    throw err;
+  }
+  return res.json();
+}
+function atErrText(e){
+  const t = T();
+  return {auth:t.errAuth, access:t.errAccess, table:t.errTable, net:t.errNet}[e.kind] || e.message;
+}
+async function atList(){
+  let out = [], offset = '';
+  do{
+    const j = await atApi(encodeURIComponent(AT_TABLE) + '?pageSize=100' + (offset ? '&offset=' + encodeURIComponent(offset) : ''));
+    out = out.concat(j.records || []); offset = j.offset;
+  }while(offset);
+  return out;
+}
+const pad2 = n => String(n).padStart(2,'0');
+const isoDay = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+const noteStamp = t => { const d = new Date(t); return `${isoDay(d)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
+function notesToText(notes){ return notes.map(n=>`[${noteStamp(n.at)}] ${n.text}`).join('\n\n'); }
+function textToNotes(txt, fallback){
+  if(!txt || !txt.trim()) return [];
+  return txt.split(/\n\s*\n/).map(s=>s.trim()).filter(Boolean).map(s=>{
+    const m = s.match(/^\[(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})\]\s*([\s\S]*)$/);
+    return m ? {text:m[6], at:new Date(+m[1], m[2]-1, +m[3], +m[4], +m[5]).getTime()} : {text:s, at:fallback};
+  });
+}
+function fromRecord(r){
+  const f = r.fields || {}, job = JOBS.find(j=>j.title===f.Job), name = (f['Full name']||'').trim();
+  if(!job || !name) return null;
+  const created = Date.parse(r.createdTime);
+  // "Applied" is a plain date. Use the exact creation time when it is the same day, so "2 hours ago" stays right.
+  let appliedAt = created;
+  if(f.Applied && f.Applied !== isoDay(new Date(created))){ const [y,m,d] = f.Applied.split('-').map(Number); appliedAt = new Date(y, m-1, d, 9).getTime(); }
+  const status = AT_STATUS[f.Status] || 'in_progress';
+  const att = (f.CV || [])[0];
+  const cv = att
+    ? {name:att.filename, type:(/\.pdf$/i.test(att.filename) || att.type==='application/pdf') ? 'pdf' : 'doc', sizeKb:Math.max(1, Math.round((att.size||0)/1024)), url:att.url, remote:true}
+    : {name:'—', type:'none', sizeKb:0};
+  return {
+    id:r.id, remote:true, name, jobId:job.id, email:f.Email || '', phone:f.Phone || '—', appliedAt,
+    source:SOURCES.includes(f.Source) ? f.Source : 'Company site', years:f['Experience (years)'] || 0,
+    status, stage: status==='in_progress' ? (AT_STAGE[f.Stage] || 'screening') : null,
+    recruiter:f.Recruiter || '—', isNew:!at.seen.has(r.id), cv,
+    summary:'', experience:[], education:'', skills:[], notes:textToNotes(f.Notes, created),
+    history:[{at:created, key:'cvReceived'}]
+  };
+}
+function renderAtState(){
+  const t = T(), note = $('#dataNote');
+  const time = at.lastSync ? new Intl.DateTimeFormat(locale(), {hour:'2-digit', minute:'2-digit'}).format(at.lastSync) : '';
+  note.classList.toggle('live', at.live && !at.broken);
+  note.classList.toggle('bad', at.broken);
+  note.textContent = at.broken ? (at.live ? t.atBroken : t.atFailed) : at.loading ? t.atLoading : at.live ? t.atLive(candidates.length, time) : t.demoNote;
+  $('#atDot').classList.toggle('on', at.live && !at.broken);
+  $('#atBtn').setAttribute('aria-label', t.atAria(at.live));
+  $('#atState').textContent = at.live ? t.atStateOn(time) : t.atStateOff;
+  $('#atOff').hidden = !at.cfg;
+}
+// Load all rows. On the very first sync, existing rows count as already read, so the bell starts clean.
+async function atSync(recs, quiet){
+  recs = recs || await atList();
+  const list = recs.map(fromRecord);
+  const skipped = list.filter(x=>!x).length;
+  const fresh = list.filter(Boolean);
+  if(!at.cfg.synced){ fresh.forEach(c=>{ c.isNew = false; at.seen.add(c.id); }); at.cfg.synced = true; }
+  const old = new Map(candidates.map(c=>[c.id, c]));
+  const added = [];
+  const next = fresh.map(c=>{
+    const o = old.get(c.id);
+    if(!o){ if(at.live && quiet) added.push(c); return c; }
+    const mine = o.history.filter(h=>h.user);
+    Object.assign(o, c); o.history = c.history.concat(mine);   // keep the same object so an open CV panel stays linked
+    return o;
+  });
+  candidates.splice(0, candidates.length, ...next);
+  at.live = true; at.broken = false; at.lastSync = Date.now();
+  saveAt(); renderAll(); renderAtState();
+  added.forEach(c=>{ const m = T().newCv(c.name, jobById(c.jobId).title); ringBell(); announce(m); toast(m, c.id); });
+  return skipped;
+}
+function atStartPolling(){
+  clearInterval(at.timer);
+  at.timer = setInterval(()=>{
+    if(document.hidden || at.pending) return;
+    atSync(null, true).catch(()=>{ at.broken = true; renderAtState(); });
+  }, AT_POLL_MS);
+}
+function atGoLive(){
+  POOL.length = 0;                  // stop the demo "new CV" simulation
+  candidates.length = 0;            // hide demo candidates
+  state.current = null;
+}
+async function atSave(c, fields, undo){
+  at.pending++;
+  try{
+    await atApi(encodeURIComponent(AT_TABLE) + '/' + c.id, {method:'PATCH', body:JSON.stringify({fields})});
+    at.broken = false;
+  }catch(e){
+    undo(); renderAll(); if(state.current===c.id) renderPanel(c);
+    const m = T().errSave(atErrText(e)); announce(m); toast(m);
+  }finally{ at.pending--; renderAtState(); }
+}
+function fileToBase64(f){
+  return new Promise((ok, bad)=>{ const r = new FileReader(); r.onload = ()=>ok(String(r.result).split(',')[1]); r.onerror = bad; r.readAsDataURL(f); });
+}
+async function atCreate(c, file){
+  const t = T(), job = jobById(c.jobId);
+  at.pending++;
+  try{
+    const res = await atApi(encodeURIComponent(AT_TABLE), {method:'POST', body:JSON.stringify({records:[{fields:{
+      'Full name':c.name, Email:c.email, Job:job.title, Applied:isoDay(new Date(c.appliedAt)), Source:c.source,
+      Status:AT_STATUS_OUT[c.status], Stage:AT_STAGE_OUT[c.stage], Recruiter:c.recruiter
+    }}]})});
+    const oldId = c.id; c.id = res.records[0].id; c.remote = true; delete c.local;
+    if(state.current===oldId) state.current = c.id;
+    renderAll(); if(state.current===c.id) renderPanel(c);
+    if(file.size > 5*1024*1024){ toast(t.errCvBig); announce(t.errCvBig); return; }
+    try{
+      await atApi(c.id + '/CV/uploadAttachment', {method:'POST', body:JSON.stringify({
+        contentType:file.type || (/\.pdf$/i.test(file.name) ? 'application/pdf' : 'application/msword'), filename:file.name, file:await fileToBase64(file)
+      })}, 'https://content.airtable.com/v0/');
+    }catch(e){ const m = t.errCvUp(atErrText(e)); toast(m); announce(m); }
+  }catch(e){
+    const m = t.errSave(atErrText(e)); toast(m); announce(m);
+  }finally{ at.pending--; }
+}
+
+/* connect dialog */
+const atDlg = $('#atDlg'), atForm = $('#atForm');
+let atLast = null;
+$('#atBtn').addEventListener('click', ()=>{
+  atLast = document.activeElement;
+  setErr($('#atToken'), $('#atTokenErr')); setErr($('#atBase'), $('#atBaseErr'));
+  $('#atToken').value = ''; $('#atToken').placeholder = at.cfg ? '••••••••••••' : 'pat…';
+  $('#atBase').value = at.cfg ? at.cfg.base : AT_DEFAULT_BASE;
+  renderAtState(); atDlg.showModal(); $('#atToken').focus();
+});
+atDlg.addEventListener('click', e=>{ if(e.target.closest('[data-close]') || outside(atDlg, e)) atDlg.close(); });
+atDlg.addEventListener('close', ()=>{ $('#atToken').value = ''; if(atLast) atLast.focus(); });
+$('#atOff').addEventListener('click', ()=>{
+  at.cfg = null; saveAt(); location.reload();   // back to the demo data
+});
+atForm.addEventListener('submit', async e=>{
+  e.preventDefault();
+  const t = T(), token = $('#atToken').value.trim(), base = $('#atBase').value.trim();
+  setErr($('#atToken'), $('#atTokenErr')); setErr($('#atBase'), $('#atBaseErr'));
+  const keep = at.cfg && !token ? at.cfg.token : '';   // already connected: empty token field keeps the saved one
+  if(!token && !keep){ setErr($('#atToken'), $('#atTokenErr'), t.errToken); $('#atToken').focus(); return; }
+  if(!/^app[A-Za-z0-9]{14}$/.test(base)){ setErr($('#atBase'), $('#atBaseErr'), t.errBase); $('#atBase').focus(); return; }
+  const prev = at.cfg;
+  at.cfg = {token:token || keep, base, synced: prev && prev.base===base ? prev.synced : false};
+  if(!prev || prev.base!==base) at.seen = new Set();
+  const go = $('#atGo'); go.disabled = true;
+  try{
+    const recs = await atList();
+    if(!at.live) atGoLive();
+    const skipped = await atSync(recs);
+    atStartPolling();
+    atDlg.close();
+    const m = t.atConnected(candidates.length) + (skipped ? ' ' + t.skipped(skipped) : '');
+    toast(m); announce(m);
+  }catch(err){
+    at.cfg = prev; if(prev) saveAt();
+    setErr($('#atToken'), $('#atTokenErr'), atErrText(err)); $('#atToken').focus();
+  }finally{ go.disabled = false; }
+});
+
 /* ---------------- start ---------------- */
+if(at.cfg){ atGoLive(); at.loading = true; }
 renderStatic();
 renderAll();
+if(at.cfg){
+  atSync().then(n=>{ at.loading = false; renderAtState(); atStartPolling(); if(n) toast(T().skipped(n)); })
+    .catch(err=>{ at.loading = false; at.broken = true; renderAtState(); const m = atErrText(err); toast(m); announce(m); });
+}
 })();
 </script>
 </body>
