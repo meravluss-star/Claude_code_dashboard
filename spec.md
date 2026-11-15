@@ -1,6 +1,6 @@
 # Micro Medical Devices — HR Recruiting Dashboard
 
-**Spec version:** 1.2 · **Date:** 2026-11-15 (1.1: 2026-11-12, 1.0: 2026-11-05)
+**Spec version:** 1.3 · **Date:** 2026-11-15 (1.2: 2026-11-15, 1.1: 2026-11-12, 1.0: 2026-11-05)
 **Owner:** HR / Talent Acquisition
 **Purpose:** One screen where recruiters see every open job, the candidates for each job, their CV files and hiring status, with an alert when a new CV arrives. The dashboard works on desktop, tablet and mobile.
 
@@ -15,16 +15,16 @@ The demo on GitHub Pages is a static page with no server. The following parts of
 | Not in the demo | Spec section | What the demo does instead |
 |---|---|---|
 | Login, company SSO, user roles (HR Admin, Recruiter, Hiring Manager) | §6 | No login — anyone with the link sees the demo |
-| Backend server and REST API (`/api/...`) | §5 | All data is built into the page as JavaScript |
-| Database and real candidate data | §4 | Fictional sample candidates only; the data model in §4 is the target format |
-| Secure / encrypted CV storage, HTTPS-only file access, access log of CV views | §3.2, §6 | Sample CVs are generated in the browser; uploaded CVs live only in memory and disappear on reload |
+| Backend server and REST API (`/api/...`) | §5 | Without Airtable: data is built into the page. With Airtable connected (§3.7): the page calls the Airtable REST API directly from the browser |
+| Database and real candidate data | §4 | Fictional candidates only — either built-in sample data, or the fictional rows in the Airtable `CVs` table (§3.7) |
+| Secure / encrypted CV storage, HTTPS-only file access, access log of CV views | §3.2, §6 | Sample CVs are generated in the browser. With Airtable connected, uploaded CVs (max 5 MB) are attached in Airtable; without it they live only in memory and disappear on reload |
 | Data retention and deletion by privacy law (GDPR / Israeli Privacy Protection Law) | §6 | Not applicable — no real personal data is stored |
-| Saving status changes, notes and history for all users | §3.3 | Saved only in the user's own browser (`localStorage`) |
-| Real new-CV notifications (polling every 60 s / WebSocket / push) | §3.4 | A simulated new CV after 25 s, then every minute, or via "Simulate new CV" |
+| Saving the full change history for all users | §3.3 | With Airtable connected, status, stage and notes are saved in Airtable for everyone; the step-by-step history stays in the user's own browser. Without Airtable, everything is saved only in the browser (`localStorage`) |
+| Real new-CV notifications (WebSocket / push) | §3.4 | With Airtable connected: polling every 30 s. Without it: a simulated new CV after 25 s, then every minute, or via "Simulate new CV" |
+| Login and a server that keeps the Airtable token secret | §3.7, §6 | Each user pastes their own Airtable personal access token; it is stored only in their browser, never in the site's code |
 | Date-range filter and filter bottom sheet on mobile | §3.1, §3.5 | Filters by job, status, source and free-text search |
 | Formal accessibility testing (axe / Lighthouse ≥ 95, NVDA, VoiceOver) and a real accessibility contact | §7.7 | Built to WCAG 2.2 AA guidelines; accessibility statement page included |
-| Database **unique constraint** on ID number and phone (duplicates impossible at the data level) | §3.6, §4 | The upload form checks for duplicates in the browser before adding; the separate Airtable base flags duplicates with an automation (§3.6) |
-| Dashboard reads / writes the Airtable base | §3.6 | The dashboard uses its built-in sample data; the Airtable `CVs` table is a separate demo of the data store |
+| Database **unique constraint** on ID number and phone (duplicates impossible at the data level) | §3.6, §4 | The upload form checks for duplicates before adding (against Airtable data when connected); an Airtable automation flags any duplicate that is added another way (§3.6) |
 
 Acceptance criteria in §8 apply to the demo only where they do not depend on the items above.
 
@@ -231,6 +231,17 @@ The same person must exist **only once**. Two submissions are the same person wh
 - Automation *"Flag duplicate CVs (same ID or phone)"*: when a record has both ID and phone filled, it finds other records with the same `ID key` or `Phone key` and links them in `Same ID as` / `Same phone as`. The formula field `Duplicate check` then shows **⚠️ Duplicate** (otherwise ✓ Unique). The original record shows the newer submission in `Later CVs with same ID / phone`.
 - The automation **never deletes** — a recruiter decides whether to merge (for example, when the ID was typed wrong).
 - Real system: the database has a **unique constraint** on the normalized ID number and on the normalized phone, so a duplicate cannot be saved at all (§4).
+- When the dashboard is connected to Airtable (§3.7), Layer 1 checks against the Airtable rows. "Add this CV to the existing candidate" then also updates the existing Airtable record: `Submissions` + 1, a line in `Duplicate notes`, `CV file` = the new file name, and the file is attached to `CV`. No second record is created.
+
+### 3.7 Airtable Connection (requirement 7)
+
+- An **Airtable** button in the header (database icon, 56 × 56 px) opens the *Connect to Airtable* dialog. A small dot on the button is green when connected, grey when not.
+- The dialog asks for a **personal access token** and the **Base ID** (pre-filled with the HR Recruiting base, `app…`, 17 characters) and explains how to create the token: scopes `data.records:read` and `data.records:write`, access to the base *HR Recruiting – Micro Medical Devices* only.
+- The token is saved **only in that browser** (`localStorage`) and is never written into the site's code. "Disconnect" removes it and goes back to the demo data.
+- When connected, the dashboard shows the rows of the `CVs` table instead of the demo data, and the line under the title says *"Live data from Airtable · {n} candidates · updated {time}"*. It reloads the table every **30 s**; new rows ring the bell.
+- Field mapping (Airtable → dashboard): `Full name`, `Email`, `Phone`, `ID number (ת.ז)`, `Job` (must match a job title), `Applied`, `Source`, `Experience (years)`, `Status`, `Stage` (Screening / Phone interview / Technical interview / Offer), `Recruiter`, `CV` (first attachment; preview for PDF), `Notes`. Rows with no name or an unknown job are skipped and counted in a message.
+- Saved back to Airtable: status and stage, notes (each note starts with `[YYYY-MM-DD HH:MM]`), new candidates from the upload form (all fields above plus `Job type`, `CV file`, `Submissions` = 1, and the CV file up to 5 MB), and blocked duplicates (§3.6). If a save fails, the change is undone on screen and a message explains why.
+- Error messages: wrong token, no access to the base, no `CVs` table, no internet — each in plain language (English and Hebrew).
 
 ---
 
@@ -373,3 +384,4 @@ Target: **WCAG 2.2 level AA**, and Israeli Standard **IS 5568** (based on WCAG),
 10. Automated accessibility check (axe / Lighthouse) shows no critical issues and score ≥ 95; all text passes 4.5 : 1 contrast.
 11. Uploading a CV with an ID number or phone that already exists (in any format, e.g. `+972 50…` vs `050-…`) creates **no** new candidate; the duplicate message names the existing candidate and offers "Add this CV to the existing candidate" and "Open existing candidate" (§3.6). An ID with a wrong check digit or a phone that is not `0` + 8–9 digits is rejected with the messages in §3.6.
 12. In the Airtable `CVs` table, a new record whose normalized ID or phone matches an existing record shows **⚠️ Duplicate** in `Duplicate check` and links to the existing record; no record is deleted automatically.
+13. After connecting with a valid token, the dashboard shows the `CVs` rows (same count as in Airtable), the green dot is on, and a status change, a note, a new candidate and a blocked duplicate are all saved in Airtable as in §3.6–3.7. The token never appears in the page's source code.
