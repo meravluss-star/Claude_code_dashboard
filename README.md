@@ -39,4 +39,6 @@ A dashboard for the HR / Talent Acquisition team at Micro Medical Devices. It sh
 | [accessibility.html](accessibility.html) | Accessibility statement |
 | [spec.md](spec.md) | Full dashboard specification |
 | [practice.md](practice.md) | Working rules (commit & push every change, keep README updated, keep the spec and its acceptance criteria consistent) |
+| [.env.example](.env.example) | Template for your private `.env` file (Airtable token, base ID, table name). Copy it to `.env` and fill in your token. |
+| `.env` | Your private settings, on your computer only. Ignored by git (see `.gitignore`), so the token never goes to GitHub. The dashboard page does **not** read this file — you still paste the token in the Airtable dialog. |
 | README.md | This file — project description and features |

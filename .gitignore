@@ -1,2 +1,7 @@
 # Packaged copies for sending (not part of the site)
 *.zip
+
+# Secrets — never commit (the repo and the site are public)
+.env
+.env.*
+!.env.example
