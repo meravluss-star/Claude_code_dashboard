@@ -1,0 +1,59 @@
+name: Update stock movers
+
+# Runs Monday-Friday at 22:30 UTC (5:30 PM EST / 6:30 PM EDT), after the US
+# market close at 4:00 PM New York time. At most 20 Alpha Vantage requests
+# per run (free tier: 25 per day). See stocks/spec.md section 2.
+on:
+  schedule:
+    - cron: "30 22 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Test only, with saved sample data (no API requests, no commit)"
+        type: boolean
+        default: false
+      force:
+        description: "Refresh even if this trading day is already saved"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-stocks
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Test the update script (saved sample data)
+        run: python stocks/tests/test_update.py
+
+      - name: Fetch today's data from Alpha Vantage
+        if: ${{ !inputs.dry_run }}
+        env:
+          ALPHA_VANTAGE_KEY: ${{ secrets.ALPHA_VANTAGE_KEY }}
+          FORCE: ${{ inputs.force && '1' || '' }}
+        run: python stocks/scripts/update_stocks.py
+
+      - name: Commit the new data
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add stocks/data
+          if git diff --cached --quiet; then
+            echo "No new data to commit."
+            exit 0
+          fi
+          git commit -m "Update stock movers data for $(jq -r .tradingDate stocks/data/latest.json)"
+          git push
