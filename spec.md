@@ -1,6 +1,6 @@
 # Micro Medical Devices — HR Recruiting Dashboard
 
-**Spec version:** 1.1 · **Date:** 2026-11-12 (1.0: 2026-11-05)
+**Spec version:** 1.2 · **Date:** 2026-11-15 (1.1: 2026-11-12, 1.0: 2026-11-05)
 **Owner:** HR / Talent Acquisition
 **Purpose:** One screen where recruiters see every open job, the candidates for each job, their CV files and hiring status, with an alert when a new CV arrives. The dashboard works on desktop, tablet and mobile.
 
@@ -23,6 +23,8 @@ The demo on GitHub Pages is a static page with no server. The following parts of
 | Real new-CV notifications (polling every 60 s / WebSocket / push) | §3.4 | A simulated new CV after 25 s, then every minute, or via "Simulate new CV" |
 | Date-range filter and filter bottom sheet on mobile | §3.1, §3.5 | Filters by job, status, source and free-text search |
 | Formal accessibility testing (axe / Lighthouse ≥ 95, NVDA, VoiceOver) and a real accessibility contact | §7.7 | Built to WCAG 2.2 AA guidelines; accessibility statement page included |
+| Database **unique constraint** on ID number and phone (duplicates impossible at the data level) | §3.6, §4 | The upload form checks for duplicates in the browser before adding; the separate Airtable base flags duplicates with an automation (§3.6) |
+| Dashboard reads / writes the Airtable base | §3.6 | The dashboard uses its built-in sample data; the Airtable `CVs` table is a separate demo of the data store |
 
 Acceptance criteria in §8 apply to the demo only where they do not depend on the items above.
 
@@ -166,8 +168,8 @@ Example jobs for a medical-device company:
 - Click → **CV viewer side panel** (full screen on mobile) with:
   - In-browser preview of the PDF.
   - Download button.
-  - Candidate details: email, phone, job, status, notes history.
-- Upload: drag & drop or "Upload CV" button; allowed types `.pdf`, `.doc`, `.docx`, max 10 MB.
+  - Candidate details: email, phone, ID number (ת.ז), job, status, notes history.
+- Upload: drag & drop or "Upload CV" button; allowed types `.pdf`, `.doc`, `.docx`, max 10 MB. The upload form asks for full name, email, **phone** and **ID number** (all required) and runs the duplicate check in §3.6 before adding the candidate.
 - Files stored in secure storage; access only for logged-in HR users (candidate data is personal — see §6).
 
 ### 3.3 Candidate Status Colors (requirement 3)
@@ -208,6 +210,28 @@ Example jobs for a medical-device company:
 - No horizontal page scrolling; 16 px side margins.
 - Bell stays visible in the sticky header on all sizes.
 
+### 3.6 Duplicate Prevention (requirement 6)
+
+The same person must exist **only once**. Two submissions are the same person when they have the **same ID number (ת.ז) OR the same phone number**.
+
+**Normalization before comparing**
+- ID number: digits only, padded with leading zeros to 9 digits (`12345678-2` = `123456782`; `5678920` → `005678920`). Must pass the Israeli ID check digit.
+- Phone: digits only; a leading `972` becomes `0` (`+972-50-555-1234` = `050-5551234` = `0505551234`). Valid form: `0` + 8–9 digits.
+
+**Layer 1 — block on entry (upload form)**
+- Validation messages: missing / wrong length ID → *"Please enter a 9-digit ID number."*; wrong check digit → *"This ID number is not valid — the check digit does not match."*; bad phone → *"Please enter a valid phone number, for example 050-1234567."*
+- If the ID or phone already exists, **no new candidate is created**. The dialog shows a message box: *"This candidate is already in the system — {name} already exists with {the same ID number / the same phone number / both}. Applied for {job} on {date}."* The box is announced to screen readers (`role="alert"`) and focus moves to its first button.
+- Two buttons (each at least 56 px tall, §1.4):
+  - **Add this CV to the existing candidate** — the new file becomes the candidate's current CV, the history gets *"New CV received (duplicate blocked) — {job}"*, the candidate gets the NEW tag and the bell rings.
+  - **Open existing candidate** — closes the dialog and opens that candidate's CV panel.
+- Editing the ID or phone field hides the message (it may no longer apply).
+
+**Layer 2 — safety net in the data store (Airtable base *HR Recruiting – Micro Medical Devices*, table `CVs`)**
+- Formula fields `ID key` and `Phone key` hold the normalized values above.
+- Automation *"Flag duplicate CVs (same ID or phone)"*: when a record has both ID and phone filled, it finds other records with the same `ID key` or `Phone key` and links them in `Same ID as` / `Same phone as`. The formula field `Duplicate check` then shows **⚠️ Duplicate** (otherwise ✓ Unique). The original record shows the newer submission in `Later CVs with same ID / phone`.
+- The automation **never deletes** — a recruiter decides whether to merge (for example, when the ID was typed wrong).
+- Real system: the database has a **unique constraint** on the normalized ID number and on the normalized phone, so a duplicate cannot be saved at all (§4).
+
 ---
 
 ## 4. Data Model
@@ -227,6 +251,7 @@ Example jobs for a medical-device company:
     "fullName": "Dana Levi",
     "email": "dana.levi@example.com",
     "phone": "+972-50-000-0000",
+    "idNumber": "123456782",
     "jobId": "J-102",
     "appliedAt": "2026-11-04T09:32:00Z",
     "source": "LinkedIn",
@@ -246,6 +271,8 @@ Example jobs for a medical-device company:
 ```
 
 `status` values: `rejected` | `in_progress` | `hired`
+
+`idNumber` (9 digits, valid check digit) and the normalized `phone` are each **unique** — one candidate per person (§3.6). A person who applies for another job gets a new application linked to the same candidate, not a second candidate.
 
 ---
 
@@ -268,6 +295,7 @@ Example jobs for a medical-device company:
 
 - Login required (company SSO); roles: HR Admin, Recruiter, Hiring Manager (view only for own jobs).
 - CVs contain personal data → encrypted storage, HTTPS only, access log for every CV view/download.
+- The ID number (ת.ז) is sensitive personal data: shown only to logged-in HR users, never put in URLs or notifications, and used for duplicate checks (§3.6).
 - Data retention: rejected candidates' CVs deleted after a defined period (per company policy / GDPR / local privacy law).
 
 ---
@@ -343,3 +371,5 @@ Target: **WCAG 2.2 level AA**, and Israeli Standard **IS 5568** (based on WCAG),
 8. Every button and icon button — including the "View" and close (✕) buttons in toasts, dialogs and the CV panel — is at least 56 × 56 px; status dropdowns and filter chips are at least 48 px tall (§1.4); icons follow the sizes in §1.3.
 9. The full flow (find a candidate, open the CV, change status, read new-CV alerts) works with keyboard only and with a screen reader (NVDA, VoiceOver).
 10. Automated accessibility check (axe / Lighthouse) shows no critical issues and score ≥ 95; all text passes 4.5 : 1 contrast.
+11. Uploading a CV with an ID number or phone that already exists (in any format, e.g. `+972 50…` vs `050-…`) creates **no** new candidate; the duplicate message names the existing candidate and offers "Add this CV to the existing candidate" and "Open existing candidate" (§3.6). An ID with a wrong check digit or a phone that is not `0` + 8–9 digits is rejected with the messages in §3.6.
+12. In the Airtable `CVs` table, a new record whose normalized ID or phone matches an existing record shows **⚠️ Duplicate** in `Duplicate check` and links to the existing record; no record is deleted automatically.

@@ -223,6 +223,11 @@ dialog::backdrop{background:rgba(21,32,43,.45)}
 .err{color:var(--rej-ink);font-weight:700;margin:0}
 .input[aria-invalid="true"],.drop.invalid{border-color:var(--rej)}
 .form-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:.75rem}
+.dup{border:2px solid var(--brand-ink);background:var(--brand-tint);border-radius:var(--radius);padding:1rem 1.25rem;display:flex;flex-direction:column;gap:.75rem}
+.dup h3{display:flex;align-items:center;gap:.5rem;font-size:1.125rem;color:var(--brand-ink)}
+.dup p{margin:0}
+.dup-actions{display:flex;flex-wrap:wrap;gap:.75rem}
+.dup-actions .btn{flex:1 1 12rem}
 
 /* toasts */
 .toasts{position:fixed;bottom:1.5rem;inset-inline-end:1.5rem;z-index:50;display:flex;flex-direction:column;gap:.75rem;max-width:calc(100vw - 2rem)}
@@ -305,6 +310,7 @@ dialog::backdrop{background:rgba(21,32,43,.45)}
     <symbol id="i-down" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
     <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M12 7v5l3 2"/></symbol>
     <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
     <linearGradient id="g-logo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3AA8FF"/><stop offset="1" stop-color="#1E90FF"/></linearGradient>
   </defs>
 </svg>
@@ -454,6 +460,17 @@ dialog::backdrop{background:rgba(21,32,43,.45)}
       <p class="err" id="upEmailErr" hidden></p>
     </div>
     <div class="field">
+      <label for="upPhone" data-i18n="phone">Phone</label>
+      <input id="upPhone" class="input" type="tel" inputmode="tel" autocomplete="off" dir="ltr" aria-describedby="upPhoneErr">
+      <p class="err" id="upPhoneErr" hidden></p>
+    </div>
+    <div class="field">
+      <label for="upId" data-i18n="idNo">ID number</label>
+      <input id="upId" class="input" type="text" inputmode="numeric" autocomplete="off" dir="ltr" maxlength="11" aria-describedby="upIdHint upIdErr">
+      <p class="muted" id="upIdHint" style="margin:0" data-i18n="idHint">9 digits. Used to check that the candidate is not already in the system.</p>
+      <p class="err" id="upIdErr" hidden></p>
+    </div>
+    <div class="field">
       <label for="upJob" data-i18n="job">Job</label>
       <select id="upJob"></select>
     </div>
@@ -467,6 +484,7 @@ dialog::backdrop{background:rgba(21,32,43,.45)}
       </div>
       <p class="err" id="upFileErr" hidden></p>
     </div>
+    <div class="dup" id="dupBox" role="alert" hidden></div>
     <div class="form-actions">
       <button type="button" class="btn btn-ghost" data-close data-i18n="cancel">Cancel</button>
       <button type="submit" class="btn btn-primary"><svg class="ic" width="24" height="24" aria-hidden="true"><use href="#i-upload"/></svg><span data-i18n="submit">Add candidate</span></button>
@@ -507,6 +525,14 @@ const I18N = {
   submit:'Add candidate', cancel:'Cancel',
   errName:'Please enter the full name.', errEmail:'Please enter a valid email, for example name@example.com.', errFile:'Please choose a CV file.',
   errType:'This file type is not supported — please use PDF, DOC or DOCX.', errSize:'File too large — max 10 MB.',
+  idNo:'ID number', idHint:'9 digits. Used to check that the candidate is not already in the system.',
+  errPhone:'Please enter a valid phone number, for example 050-1234567.', errId:'Please enter a 9-digit ID number.',
+  errIdCheck:'This ID number is not valid — the check digit does not match. Please check it.',
+  dupTitle:'This candidate is already in the system',
+  dupBy:{id:'the same ID number', phone:'the same phone number', both:'the same ID number and phone number'},
+  dupBody:(n,by,j,d)=>`${n} already exists with ${by}. Applied for ${j} on ${d}. No new candidate was created.`,
+  openExisting:'Open existing candidate', attachCv:'Add this CV to the existing candidate',
+  dupAdded:n=>`New CV added to the existing candidate ${n}`, dupCvHist:j=>`New CV received (duplicate blocked) — ${j}`,
   newCv:(n,j)=>`New CV: ${n} — ${j}`, view:'View', footer:'Micro Medical Devices · HR Recruiting', a11y:'Accessibility statement',
   cvSummary:'Summary', education:'Education', skills:'Skills', workExp:'Experience',
   previewNA:'Preview is not available for Word files. Download the file to open it.',
@@ -538,6 +564,14 @@ const I18N = {
   submit:'הוספת מועמד/ת', cancel:'ביטול',
   errName:'נא להזין שם מלא.', errEmail:'נא להזין אימייל תקין, למשל name@example.com.', errFile:'נא לבחור קובץ קורות חיים.',
   errType:'סוג הקובץ לא נתמך — נא להשתמש ב־PDF, DOC או DOCX.', errSize:'הקובץ גדול מדי — עד 10MB.',
+  idNo:'תעודת זהות', idHint:'9 ספרות. משמש לבדיקה שהמועמד/ת לא נמצא/ת כבר במערכת.',
+  errPhone:'נא להזין מספר טלפון תקין, למשל 050-1234567.', errId:'נא להזין מספר ת.ז בן 9 ספרות.',
+  errIdCheck:'מספר ת.ז לא תקין — ספרת הביקורת לא מתאימה. נא לבדוק אותו.',
+  dupTitle:'המועמד/ת כבר נמצא/ת במערכת',
+  dupBy:{id:'אותו מספר ת.ז', phone:'אותו מספר טלפון', both:'אותו מספר ת.ז ואותו טלפון'},
+  dupBody:(n,by,j,d)=>`${n} כבר קיים/ת במערכת עם ${by}. הגיש/ה למשרה ${j} בתאריך ${d}. לא נוצר מועמד חדש.`,
+  openExisting:'פתיחת המועמד/ת הקיים/ת', attachCv:'הוספת קורות החיים למועמד/ת הקיים/ת',
+  dupAdded:n=>`קורות החיים החדשים נוספו למועמד/ת הקיים/ת ${n}`, dupCvHist:j=>`התקבלו קו״ח חדשים (כפילות נחסמה) — ${j}`,
   newCv:(n,j)=>`קו״ח חדשים: ${n} — ${j}`, view:'צפייה', footer:'מיקרו מדיקל דיבייסס · גיוס עובדים', a11y:'הצהרת נגישות',
   cvSummary:'תקציר', education:'השכלה', skills:'מיומנויות', workExp:'ניסיון תעסוקתי',
   previewNA:'אין תצוגה מקדימה לקובצי Word. הורידו את הקובץ כדי לפתוח אותו.',
@@ -591,6 +625,29 @@ const COMPANIES = ['MedTech Labs','BioSense Ltd','CardioWave','NeuroLine','Ortho
 const STAGES = ['screening','phone','technical','offer'];
 const NOW = Date.now(), H = 3600e3, D = 24*H;
 
+/* ---------------- duplicate check: ID number (ת.ז) + phone ---------------- */
+// Keys are normalized so that "050-555-1234", "+972 50 5551234" and "0505551234" are the same phone,
+// and "12345678-2" / "012345678" style IDs compare as 9 digits.
+const digits = v => String(v||'').replace(/\D/g,'');
+const normId = v => { const d = digits(v); return d ? d.padStart(9,'0') : ''; };
+const normPhone = v => { let d = digits(v); if(d.startsWith('972')) d = '0' + d.slice(3); return d; };
+function idSum(d){ let s = 0; for(let i=0;i<d.length;i++){ let x = +d[i] * ((i%2)+1); if(x>9) x -= 9; s += x; } return s; }
+const validId = v => { const d = digits(v); return d.length>=5 && d.length<=9 && !/^0+$/.test(d) && idSum(normId(d)) % 10 === 0; };
+const validPhone = v => /^0\d{8,9}$/.test(normPhone(v));
+const RID = rng(5568); // separate generator so the sample data stays the same
+function newIdNo(){ const d8 = String(10000000 + Math.floor(RID()*29999999)); return d8 + ((10 - idSum(d8) % 10) % 10); }
+function findDuplicate(idNo, phone){
+  const i = normId(idNo), p = normPhone(phone);
+  const c = candidates.find(x => (i && normId(x.idNo)===i) || (p && normPhone(x.phone)===p));
+  if(!c) return null;
+  const byId = i && normId(c.idNo)===i, byPhone = p && normPhone(c.phone)===p;
+  return {c, by: byId && byPhone ? 'both' : byId ? 'id' : 'phone'};
+}
+
+// Sample phones must be unique too (the demo people are all different people)
+const usedPhones = new Set();
+function uniquePhone(n){ while(usedPhones.has(n)) n = n>=9999 ? 1000 : n+1; usedPhones.add(n); return '+972-50-555-' + n; }
+
 let seq = 0;
 function makeCandidate(name, job, hoursAgo, statusOverride){
   const years = between(1,14);
@@ -607,7 +664,7 @@ function makeCandidate(name, job, hoursAgo, statusOverride){
   const cand = {
     id:'C-' + String(401 + seq++).padStart(4,'0'), name, jobId:job.id,
     email:`${first}.${last}`.toLowerCase().replace(/[^a-z.]/g,'') + '@example.com',
-    phone:'+972-50-555-' + String(between(1000,9999)),
+    phone:uniquePhone(between(1000,9999)), idNo:newIdNo(),
     appliedAt, source:pick(SOURCES), years, status, stage, recruiter:pick(RECRUITERS),
     isNew: hoursAgo < 24,
     cv:{ name:`${first}_${last}_CV.${isDoc?'docx':'pdf'}`.replace(/-/g,''), type:isDoc?'doc':'pdf', sizeKb:between(120,900) },
@@ -914,6 +971,7 @@ function historyText(h){
   const t = T();
   if(h.key==='cvReceived') return t.cvReceived;
   if(h.key==='note') return t.noteAdded;
+  if(h.key==='dupCv') return t.dupCvHist(jobById(h.jobId).title);
   if(h.key==='status') return t.statusChanged(t[h.from], t[h.to] + (h.stage ? ' · ' + t.stages[h.stage] : ''));
   return '';
 }
@@ -942,6 +1000,7 @@ function renderPanel(c){
           <dt>${t.job}</dt><dd>${esc(job.title)}</dd>
           <dt>${t.email}</dt><dd><a href="mailto:${esc(c.email)}">${esc(c.email)}</a></dd>
           <dt>${t.phone}</dt><dd><a href="tel:${esc(c.phone.replace(/-/g,''))}" dir="ltr">${esc(c.phone)}</a></dd>
+          <dt>${t.idNo}</dt><dd dir="ltr">${esc(c.idNo || '—')}</dd>
           <dt>${t.applied}</dt><dd>${fmtDateTime(c.appliedAt)}</dd>
           <dt>${t.source}</dt><dd>${t.sources[c.source]}</dd>
           <dt>${t.experience}</dt><dd>${t.years(c.years)}</dd>
@@ -1070,7 +1129,7 @@ function toast(msg, id){
 const upDlg = $('#uploadDlg'), upForm = $('#upForm');
 let upLast = null;
 $('#uploadBtn').addEventListener('click', ()=>{
-  upLast = document.activeElement; upForm.reset(); clearErrs(); $('#upFileName').textContent = '';
+  upLast = document.activeElement; upForm.reset(); clearErrs(); hideDup(); $('#upFileName').textContent = ''; droppedFile = null;
   if(state.job!=='all') $('#upJob').value = state.job;
   upDlg.showModal(); $('#upName').focus();
 });
@@ -1080,7 +1139,40 @@ function setErr(input, errEl, msg){
   errEl.textContent = msg || ''; errEl.hidden = !msg;
   if(input) input.setAttribute('aria-invalid', msg ? 'true' : 'false');
 }
-function clearErrs(){ setErr($('#upName'), $('#upNameErr')); setErr($('#upEmail'), $('#upEmailErr')); setErr($('#upFile'), $('#upFileErr')); $('#drop').classList.remove('invalid'); }
+function clearErrs(){
+  setErr($('#upName'), $('#upNameErr')); setErr($('#upEmail'), $('#upEmailErr'));
+  setErr($('#upPhone'), $('#upPhoneErr')); setErr($('#upId'), $('#upIdErr'));
+  setErr($('#upFile'), $('#upFileErr')); $('#drop').classList.remove('invalid');
+}
+let dupPending = null; // {c, file, jobId} while the duplicate message is shown
+function hideDup(){ dupPending = null; $('#dupBox').hidden = true; $('#dupBox').innerHTML = ''; }
+// Editing the ID or phone hides an old duplicate message (it may no longer apply)
+['#upPhone','#upId'].forEach(s=>$(s).addEventListener('input', ()=>{ if(dupPending) hideDup(); }));
+function showDup(d, file, jobId){
+  const t = T(), box = $('#dupBox');
+  dupPending = {c:d.c, file, jobId};
+  box.innerHTML = `<h3>${ic('copy',28)}<span>${t.dupTitle}</span></h3>
+    <p>${esc(t.dupBody(d.c.name, t.dupBy[d.by], jobById(d.c.jobId).title, fmtDate(d.c.appliedAt)))}</p>
+    <div class="dup-actions">
+      <button type="button" class="btn btn-primary" id="dupAttach">${ic('file',24)}<span>${t.attachCv}</span></button>
+      <button type="button" class="btn btn-ghost" id="dupOpen">${ic('eye',24)}<span>${t.openExisting}</span></button>
+    </div>`;
+  box.hidden = false;
+  $('#dupAttach').addEventListener('click', attachToExisting);
+  $('#dupOpen').addEventListener('click', ()=>{ const id = dupPending.c.id; upLast = null; upDlg.close(); openPanel(id); });
+  $('#dupAttach').focus();
+}
+function attachToExisting(){
+  const {c, file, jobId} = dupPending, t = T();
+  const isPdf = /\.pdf$/i.test(file.name);
+  c.cv = {name:file.name, type:isPdf?'pdf':'doc', sizeKb:Math.max(1, Math.round(file.size/1024)), blob:file, url:URL.createObjectURL(file)};
+  c.history.push({at:Date.now(), key:'dupCv', jobId, user:true});
+  c.isNew = true;
+  droppedFile = null; upLast = null; hideDup(); upDlg.close();
+  persist(); renderAll(); ringBell();
+  const msg = t.dupAdded(c.name); announce(msg); toast(msg, c.id);
+  $('#uploadBtn').focus();
+}
 let droppedFile = null;
 const drop = $('#drop');
 ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.add('over'); }));
@@ -1089,19 +1181,27 @@ drop.addEventListener('drop', e=>{ const f = e.dataTransfer.files[0]; if(f){ dro
 $('#upFile').addEventListener('change', e=>{ droppedFile = e.target.files[0] || null; $('#upFileName').textContent = droppedFile ? droppedFile.name : ''; });
 upForm.addEventListener('submit', e=>{
   e.preventDefault();
-  const t = T(); clearErrs();
+  const t = T(); clearErrs(); hideDup();
   const name = $('#upName').value.trim(), email = $('#upEmail').value.trim(), f = droppedFile;
+  const phone = $('#upPhone').value.trim(), idNo = $('#upId').value.trim();
   let first = null;
   if(!name){ setErr($('#upName'), $('#upNameErr'), t.errName); first = first || $('#upName'); }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ setErr($('#upEmail'), $('#upEmailErr'), t.errEmail); first = first || $('#upEmail'); }
+  if(!validPhone(phone)){ setErr($('#upPhone'), $('#upPhoneErr'), t.errPhone); first = first || $('#upPhone'); }
+  const idLen = digits(idNo).length;
+  if(idLen<5 || idLen>9){ setErr($('#upId'), $('#upIdErr'), t.errId); first = first || $('#upId'); }
+  else if(!validId(idNo)){ setErr($('#upId'), $('#upIdErr'), t.errIdCheck); first = first || $('#upId'); }
   if(!f){ setErr($('#upFile'), $('#upFileErr'), t.errFile); first = first || $('#upFile'); }
   else if(!/\.(pdf|docx?)$/i.test(f.name)){ setErr($('#upFile'), $('#upFileErr'), t.errType); first = first || $('#upFile'); }
   else if(f.size > 10*1024*1024){ setErr($('#upFile'), $('#upFileErr'), t.errSize); first = first || $('#upFile'); }
   if(first){ if(first===$('#upFile')) drop.classList.add('invalid'); first.focus(); return; }
   const job = jobById($('#upJob').value);
+  // Block duplicates: same ID number OR same phone = the same person
+  const dup = findDuplicate(idNo, phone);
+  if(dup){ showDup(dup, f, job.id); return; }
   const isPdf = /\.pdf$/i.test(f.name);
   const c = {
-    id:'C-' + String(401 + seq++).padStart(4,'0'), name, email, phone:'—', jobId:job.id, appliedAt:Date.now(),
+    id:'C-' + String(401 + seq++).padStart(4,'0'), name, email, phone, idNo:normId(idNo), jobId:job.id, appliedAt:Date.now(),
     source:'Company site', years:0, status:'in_progress', stage:'screening', recruiter:'Merav', isNew:true, local:true,
     cv:{name:f.name, type:isPdf?'pdf':'doc', sizeKb:Math.max(1, Math.round(f.size/1024)), blob:f, url:URL.createObjectURL(f)},
     summary:'', experience:[], education:'', skills:[], notes:[], history:[{at:Date.now(), key:'cvReceived'}]
