@@ -1,7 +1,6 @@
 # Working Practice — HR Recruiting Dashboard
 
 Rules for everyone (people and Claude) working on this project.
-The same rules apply to the **Market Movers** stock dashboard in `stocks/` (its spec is `stocks/spec.md`, Acceptance Criteria §7, Out of Scope §0).
 
 ## 1. Commit and push automatically
 

@@ -6,8 +6,6 @@ A dashboard for the HR / Talent Acquisition team at Micro Medical Devices. It sh
 
 **Live dashboard:** https://meravluss-star.github.io/Claude_code_dashboard/
 
-> This repository also hosts a second, separate demo: **[Market Movers](#market-movers--daily-top-10-most-active-us-stocks)**, a stock dashboard at [`/stocks/`](https://meravluss-star.github.io/Claude_code_dashboard/stocks/).
-
 ## Features
 
 - **Candidates by job** — list of 6 open jobs with candidate counts and a red/yellow/green mini bar; a sortable candidates table; filters by job, status and source; search by name, email or skill; summary (KPI) cards that also filter by status; and a chart of candidates per job (click a bar to filter, or view it as a table).
@@ -42,41 +40,3 @@ A dashboard for the HR / Talent Acquisition team at Micro Medical Devices. It sh
 | [spec.md](spec.md) | Full dashboard specification |
 | [practice.md](practice.md) | Working rules (commit & push every change, keep README updated, keep the spec and its acceptance criteria consistent) |
 | README.md | This file — project description and features |
-| [stocks/](stocks/) | Market Movers stock dashboard (see below) |
-| [.github/workflows/update-stocks.yml](.github/workflows/update-stocks.yml) | Daily job that updates the Market Movers data |
-
----
-
-## Market Movers — Daily Top 10 Most Active US Stocks
-
-A friendly, mobile-first page in English that shows the 10 most actively traded US stocks of the last trading day. For each one it shows whether it went up or down, the news that may explain the move, and a short description of the company. Data comes from **Alpha Vantage** and updates automatically after every trading day. The full spec is in [stocks/spec.md](stocks/spec.md).
-
-**Live page:** https://meravluss-star.github.io/Claude_code_dashboard/stocks/
-
-### Features
-
-- **Top 10 most active stocks**: ranked by share volume. ETFs, warrants and shares under $0.50 are left out.
-- **Clear up/down marking**: green ▲ with + for gains, red ▼ with − for losses (never color alone), with % change, $ change and price.
-- **Bold names**: ticker and company name in bold on every card.
-- **Why it moved**: up to 3 news headlines per stock from Alpha Vantage, with source, date and news sentiment (Bullish … Bearish); each opens the article.
-- **About the company**: a 1–2 sentence description, exchange, sector, industry and market cap.
-- **Summary tiles**: number of gainers and losers, top gainer and top loser.
-- **Filter and sort**: All / Gainers / Losers; sort by volume, biggest gain, biggest loss, price or ticker.
-- **Mobile friendly**: one column on phones and tablets, two columns on desktop, white background, touch targets of at least 56 px.
-- **Automatic daily update**: a GitHub Actions job runs Monday–Friday at 22:30 UTC (after the US close), fetches the data and commits it, which updates the live page.
-- **Stays on the free plan**: at most 20 Alpha Vantage requests per run (free limit: 25 per day). It skips the run with 1 request if the trading day is already saved, and caches company profiles (30 days) and the ETF list (7 days).
-
-### Setup: Alpha Vantage key
-
-The daily job needs a free Alpha Vantage API key, stored as a GitHub repository secret (never in the code):
-
-1. Get a free key at https://www.alphavantage.co/support/#api-key
-2. In the repository, open **Settings → Secrets and variables → Actions → New repository secret**. Set the name to `ALPHA_VANTAGE_KEY` and the value to your key. You can also run `gh secret set ALPHA_VANTAGE_KEY` and paste the key when asked.
-3. Optional: run it once now in **Actions → Update stock movers → Run workflow**.
-
-### Limitations
-
-- End-of-day data only, no live prices or charts. The page shows the starting data (Nov 13, 2026, marked with a yellow notice) until the first automatic run.
-- The free key allows 25 requests a day **in total**. If the same key is also used elsewhere on the same day, some news or profiles may be skipped that day.
-- "Why it moved" lists headlines, not a written analysis. For information only, not investment advice.
-- The full list is in the spec's **§0 Out of Scope**.
